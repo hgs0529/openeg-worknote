@@ -3,8 +3,67 @@
 
 <mapper namespace="open.eg.worknote.dao.WorknoteDao">
 
-<select id="test" resultType="Integer">
-	SELECT COUNT(*) FROM WORKER
+<!-- 사원 등록이 되어있는지 검사  -->
+<select id="checkUsername" parameterType="open.eg.worknote.dto.UserDto" resultType="Integer">
+	select count(*) from user
+	where user_name = #{username}
 </select>
+
+<!-- 아이피를 등록 했는지 검사  -->
+<select id="checkUser" parameterType="open.eg.worknote.dto.UserDto" resultType="Integer">
+	select count(*) from user
+	where user_name = #{username} and user_ip = #{userip}
+</select>
+
+<!-- 아이피 등록이 되어있으면 아이디를 찾아서 리턴  -->
+<select id="getUserId" parameterType="open.eg.worknote.dto.UserDto" resultType="String">
+	select user_id from user
+	where user_name = #{username} and user_ip = #{userip}
+</select>
+
+<!-- 아이피 등록  -->
+<update id="regiUser" parameterType="open.eg.worknote.dto.UserDto">
+	update user
+	set user_ip = #{userip}, user_id = #{userid}
+	where user_name = #{username}
+</update>
+
+<!-- 아이디로 이름 검색 --> 
+<select id="getUserById" parameterType="String" resultType="open.eg.worknote.dto.UserDto">
+	select user_name as username, user_position as userPosition from user
+	where user_id = #{userid}
+</select>
+
+
+
+<!-- 출근을 이미 찍었는지 검사 -->
+<select id="checkStart" parameterType="String" resultType="Integer">
+	select count(*) from worknote
+	where user_id = #{userid}
+    	and date_format(start_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d')
+</select>
+
+<!-- 퇴근을 이미 찍었는지 검사 -->
+<select id="checkEnd" parameterType="String" resultType="Integer">
+	select count(*) from worknote
+	where user_id = #{userid}
+    	and date_format(start_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d')
+		and end_time is not null
+</select>
+
+<!-- 출근등록 -->
+<insert id="regiStart" parameterType="open.eg.worknote.dto.WorknoteDto">
+	insert into worknote(user_id, start_time, end_time, start_location, end_location)
+	values(#{userid}, now(), null, #{startLocation}, null);
+</insert>
+
+<!-- 퇴근등록 -->
+<update id="regiEnd" parameterType="open.eg.worknote.dto.WorknoteDto">
+	update worknote
+	set end_time = now(), end_location = #{endLocation}
+	where user_id = #{userid} 
+		and date_format(start_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d')
+		and end_time is null
+</update>
 
 </mapper>
